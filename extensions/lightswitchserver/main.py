@@ -35,61 +35,61 @@ extension = umsgpack.packb({
          "Function": "SetSwitches",
          "Parameter": umsgpack.packb({"State":True}),
          "Sentences": [
-             "licht an",
-             "mache das licht an",
-             "lichter an",
-             "mache die lichter an",
+             "licht an".split(" "),
+             "mache das licht an".split(" "),
+             "lichter an".split(" "),
+             "mache die lichter an".split(" "),
          ]},
         {"Name": "Turn Off Lights",
          "Function": "SetSwitches",
          "Parameter": umsgpack.packb({"State":False}),
          "Sentences": [
-             "licht aus",
-             "mache das licht aus",
-             "lichter aus",
-             "mache die lichter aus",
+             "licht aus".split(" "),
+             "mache das licht aus".split(" "),
+             "lichter aus".split(" "),
+             "mache die lichter aus".split(" "),
          ]},
         {"Name": "Turn On Vorderlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "vorderlicht", "State": True}),
          "Sentences": [
-             "vorderlicht an",
-             "mache das vorderlicht an",
+             "vorderlicht an".split(" "),
+             "mache das vorderlicht an".split(" "),
          ]},
         {"Name": "Turn Off Vorderlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "vorderlicht", "State": False}),
          "Sentences": [
-             "vorderlicht aus",
-             "mache das vorderlicht aus",
+             "vorderlicht aus".split(" "),
+             "mache das vorderlicht aus".split(" "),
          ]},
         {"Name": "Turn On Lights Hauptlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "hauptlicht", "State": True}),
          "Sentences": [
-             "hauptlicht an",
-             "mache das hauptlicht an",
+             "hauptlicht an".split(" "),
+             "mache das hauptlicht an".split(" "),
          ]},
         {"Name": "Turn Off Lights hauptlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "hauptlicht", "State": False}),
          "Sentences": [
-             "hauptlicht aus",
-             "mache das hauptlicht aus",
+             "hauptlicht aus".split(" "),
+             "mache das hauptlicht aus".split(" "),
          ]},
         {"Name": "Turn On Lights hinterlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "hinterlicht", "State": True}),
          "Sentences": [
-             "hinterlicht an",
-             "mache das hinterlicht an",
+             "hinterlicht an".split(" "),
+             "mache das hinterlicht an".split(" "),
          ]},
         {"Name": "Turn Off Lights hinterlicht",
          "Function": "SetSwitch",
          "Parameter": umsgpack.packb({"Name": "hinterlicht", "State": False}),
          "Sentences": [
-             "hinterlicht aus",
-             "mache das hinterlicht aus",
+             "hinterlicht aus".split(" "),
+             "mache das hinterlicht aus".split(" "),
          ]},
     ]
 })
@@ -99,10 +99,10 @@ SWITCHES433["vorderlicht"]= Switch433("A", False, 1115473, 1115476)
 SWITCHES433["hauptlicht"]= Switch433("B", False, 1118545, 1118548)
 SWITCHES433["hinterlicht"]= Switch433("D", False, 1119505, 1119508)
 
-class ExtenstionInput(threading.Thread):
+class ExtensionInput(threading.Thread):
     def __init__(self):
         self._input = Input(descriptor_extension)
-        super(RequestResponder, self).__init__()
+        super(ExtensionInput, self).__init__()
 
     def run(self):
         connected = self._input.connected()
@@ -153,7 +153,7 @@ def main():
 
     RequestResponder(o, switches).start()
     SwitchEventResponder(ctl, switches).start()
-    ExtenstionInput().start()
+    ExtensionInput().start()
 
 
 
