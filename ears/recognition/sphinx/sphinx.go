@@ -1,0 +1,105 @@
+package sphinx
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"rommi/ears/audio"
+	"strings"
+
+	"github.com/ThingiverseIO/logger"
+	"github.com/joernweissenborn/eventual2go/typedevents"
+	"github.com/xlab/pocketsphinx-go/sphinx"
+)
+
+var log = logger.New("Rommi Ears Recognizer")
+
+type Recognizer struct {
+	*sphinx.Decoder
+	cfg         *Config
+	utterances  *typedevents.StringStreamController
+	inUtterance bool
+}
+
+type Config struct {
+	Hmm, Dict, Lm, G2PModel string
+	WorkDir                 string
+	SampleRate              float32
+}
+
+func (cfg Config) sphinxCfg() *sphinx.Config {
+	return sphinx.NewConfig(
+		sphinx.HMMDirOption(cfg.Hmm),
+		sphinx.DictFileOption(cfg.Dict),
+		sphinx.LMFileOption(cfg.Lm),
+		sphinx.SampleRateOption(cfg.SampleRate),
+	)
+}
+
+func New(cfg *Config) (sr *Recognizer, err error) {
+	_, err = os.Stat(cfg.Dict)
+	if err != nil {
+		if err = ioutil.WriteFile(cfg.Dict, []byte{}, os.ModePerm); err != nil {
+			return
+		}
+	}
+	dec, err := sphinx.NewDecoder(cfg.sphinxCfg())
+	if err != nil {
+		return
+	}
+	sr = &Recognizer{
+		Decoder:    dec,
+		cfg:        cfg,
+		utterances: typedevents.NewStringStreamController(),
+	}
+	return
+}
+
+func (sr *Recognizer) SetWordList(words []string) {
+
+	sr.inUtterance = false
+	sr.EndUtt()
+	defer sr.StartUtt()
+
+	// Word Create file
+	path := filepath.Join(sr.cfg.WorkDir, "wordlist")
+	ioutil.WriteFile(path, []byte(strings.Join(words, "\n")), os.ModePerm)
+
+	// Call g2p
+	cmd := exec.Command("g2p-seq2seq",
+		fmt.Sprintf("--decode=%s", path),
+		fmt.Sprintf("--model=%s", sr.cfg.G2PModel),
+		fmt.Sprintf("--output=%s", sr.cfg.Dict),
+	)
+		// err := cmd.Run()
+	// log.Debug("Error Run G2P: %s", err)
+		out, err := cmd.Output()
+		log.Debugf("%s:%s",err, out)
+
+	// Reconfigure
+	sr.Decoder.Reconfigure(sr.cfg.sphinxCfg())
+}
+
+func (sr *Recognizer) Recognize(in *audio.AudioStream) (utterances *typedevents.StringStream) {
+	sr.StartUtt()
+	in.Listen(sr.recognize)
+	return sr.utterances.Stream()
+}
+
+func (sr *Recognizer) recognize(a audio.Audio) {
+	sr.ProcessRaw(a.Samples(), false, false)
+	if sr.IsInSpeech() {
+		sr.inUtterance = true
+	} else if sr.inUtterance {
+		sr.inUtterance = false
+		sr.EndUtt()
+		hyp, _ := sr.Hypothesis()
+		sentence := fmt.Sprint(hyp)
+		if len(sentence) > 0 {
+			sr.utterances.Add(sentence)
+		}
+		sr.StartUtt()
+	}
+}
