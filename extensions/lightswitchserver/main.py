@@ -132,6 +132,9 @@ class RequestResponder(threading.Thread):
             if request.function() == "SetSwitch":
                 self._switches.set_switch(request)
 
+            if request.function() == "SetSwitches":
+                self._switches.set_switches(request)
+
 class SwitchEventResponder(threading.Thread):
     def __init__(self, ctl, switches):
         self._ctl = ctl

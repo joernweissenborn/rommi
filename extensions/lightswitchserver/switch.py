@@ -46,6 +46,14 @@ class Switches(object):
         states = [self._switches[name].state for name in self._switches]
         return names, states
 
+    def set_switches(self, request):
+        state = request.parameter()['State']
+        print("setting all switches: {}".format(state))
+        for name in self._switches:
+            self.turn_switch(name, state)
+        request.reply({})
+        self.update_states_property()
+
     def set_switch(self, request):
         name, state = request.parameter()['Name'], request.parameter()['State']
         print("setting switch '{}': {}".format(name,state))
