@@ -16,17 +16,6 @@ descriptor_extension = '''
 function RegisterExtension(Extension bin)
 '''
 
-GPIO_TX = 17
-GPIO_RX = 27
-
-
-# SW	ON		OFF
-# ===============================
-# A	1115473		1115476
-# B	1118545		1118548
-# C	1119333     1119316
-# D	1119505		1119508
-
 extension = umsgpack.packb({
     "Name": "LightSwitchServer",
     "Descriptor": descriptor,
@@ -94,10 +83,23 @@ extension = umsgpack.packb({
     ]
 })
 
+
+GPIO_TX = 17
+GPIO_RX = 27
+
+
+# SW	ON		OFF
+# ===============================
+# A	1115473		1115476
+# B	1118545		1118548
+# C	1119333     1119316
+# D	1119505		1119508
+
 SWITCHES433 = OrderedDict()
 SWITCHES433["vorderlicht"]= Switch433("A", False, 1115473, 1115476)
 SWITCHES433["hauptlicht"]= Switch433("B", False, 1118545, 1118548)
 SWITCHES433["hinterlicht"]= Switch433("D", False, 1119505, 1119508)
+SWITCHES433["tageslicht"]= Switch433("c", False, 1119333, 1119316)
 
 class ExtensionInput(threading.Thread):
     def __init__(self):
