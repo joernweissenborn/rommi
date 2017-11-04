@@ -58,7 +58,7 @@ class Switch433Controller(Thread):
             if self._rxdevice.rx_code_timestamp != timestamp:
                 timestamp = self._rxdevice.rx_code_timestamp
                 self._check_code(self._rxdevice.rx_code)
-            time.sleep(0.01)
+            time.sleep(1)
 
 
 class Switch433(Switch):
