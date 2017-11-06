@@ -8,5 +8,5 @@ import (
 
 type Recognizer interface {
 	Recognize(in *audio.AudioStream) (utterances *typedevents.StringStream)
-	SetWordList(words []string)
+	SetWordList(words []string) (err error)
 }

@@ -127,7 +127,7 @@ func Start(path string) (err error) {
 	log.Info("Start Recording")
 	err = c.startRecording()
 	if err != nil {
-		log.Error("Error Start Recording: ",err)
+		log.Error("Error Start Recording: ", err)
 		return
 	}
 
@@ -167,7 +167,11 @@ func (c *core) onSetWordList(d eventual2go.Data) {
 	var wordlist setWordList
 	req.Decode(&wordlist)
 	log.Infof("Got New World List: %s", wordlist.Words)
-	c.recognizer.SetWordList(wordlist.Words)
+	if err := c.recognizer.SetWordList(wordlist.Words); err != nil {
+		log.Error("Error Setting Word List: ", err)
+	} else {
+		log.Success("Done")
+	}
 	c.output.Reply(req, nil)
 }
 

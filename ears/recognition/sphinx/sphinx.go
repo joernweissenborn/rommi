@@ -9,12 +9,9 @@ import (
 	"rommi/ears/audio"
 	"strings"
 
-	"github.com/ThingiverseIO/logger"
 	"github.com/joernweissenborn/eventual2go/typedevents"
 	"github.com/xlab/pocketsphinx-go/sphinx"
 )
-
-var log = logger.New("Rommi Ears Recognizer")
 
 type Recognizer struct {
 	*sphinx.Decoder
@@ -57,7 +54,7 @@ func New(cfg *Config) (sr *Recognizer, err error) {
 	return
 }
 
-func (sr *Recognizer) SetWordList(words []string) {
+func (sr *Recognizer) SetWordList(words []string) (err error) {
 
 	sr.inUtterance = false
 	sr.EndUtt()
@@ -73,10 +70,11 @@ func (sr *Recognizer) SetWordList(words []string) {
 		fmt.Sprintf("--model=%s", sr.cfg.G2PModel),
 		fmt.Sprintf("--output=%s", sr.cfg.Dict),
 	)
-		// err := cmd.Run()
-	// log.Debug("Error Run G2P: %s", err)
-		out, err := cmd.Output()
-		log.Debugf("%s:%s",err, out)
+
+	err := cmd.Run()
+	if err != nil {
+		return
+	}
 
 	// Reconfigure
 	sr.Decoder.Reconfigure(sr.cfg.sphinxCfg())

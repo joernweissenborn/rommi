@@ -1,6 +1,7 @@
 package core
 
 import (
+	"rommi/brain"
 	"rommi/brain/extension"
 	"rommi/brain/language/sentence"
 	"rommi/brain/language/wordlist"
@@ -10,11 +11,15 @@ import (
 	"time"
 
 	"github.com/ThingiverseIO/logger"
+	"github.com/ThingiverseIO/thingiverseio"
 	"github.com/joernweissenborn/eventual2go"
 )
 
 var (
-	log                  = logger.New("Rommis Brain")
+	log = logger.New("Rommis Brain")
+)
+
+const (
 	likelynessThreshhold = 0.6
 	triggerWord          = "computer"
 )
@@ -26,6 +31,7 @@ type core struct {
 	listening bool
 	voice     *voice.Voice
 	wordlist  wordlist.WordList
+	output    *thingiverseio.Output
 }
 
 func Start() (err error) {
@@ -73,6 +79,17 @@ func Start() (err error) {
 	}
 	c.AddStream(registerServiceEvent{}, eo.Extensions().Stream)
 	eo.Run()
+
+	log.Init("Initializing Output")
+	c.output, err = thingiverseio.NewOutput(brain.Descriptor)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	isTC := func(r *thingiverseio.Request) bool { return r.Function == "TellCommand" }
+	c.AddStream(brain.TellCommandRequest{}, c.output.Requests().Where(isTC).Stream)
+	c.React(brain.TellCommandRequest{},c.onTellCommand)
+	c.output.Run()
 
 	log.Init("Done")
 	return
@@ -123,8 +140,8 @@ func (c *core) onRemoveService(d eventual2go.Data) {
 		c.voice.Speak("Service Removed")
 		c.updateWordList(nil)
 	}
-}
 
+}
 func (c *core) onUtterance(d eventual2go.Data) {
 	s := d.(sentence.Sentence)
 	log.Info("Got Utterance: ", s)
@@ -140,6 +157,16 @@ func (c *core) onUtterance(d eventual2go.Data) {
 	} else if c.listening {
 		c.listening = !c.checkForAction(s)
 	}
+}
+
+func (c *core) onTellCommand(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	var tellCmdReq brain.TellCommandRequest
+	r.Decode(&tellCmdReq)
+	log.Info("Got Told A Command: ", tellCmdReq.Cmd)
+
+	c.checkForAction(sentence.New(tellCmdReq.Cmd))
+	c.output.Reply(r, nil)
 }
 
 func (c *core) checkForAction(s sentence.Sentence) (ok bool) {

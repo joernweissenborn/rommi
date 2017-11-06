@@ -6,7 +6,7 @@ import (
 	"github.com/ThingiverseIO/thingiverseio"
 )
 
-const descriptor string = `
+const Descriptor string = `
 function Speak(Text string)()
 property InSpeech: Is bool
 `
@@ -25,7 +25,7 @@ type Voice struct {
 }
 
 func New() (v *Voice, err error) {
-	i, err := thingiverseio.NewInput(descriptor)
+	i, err := thingiverseio.NewInput(Descriptor)
 	if err != nil {
 		return
 	}
@@ -39,7 +39,16 @@ func (v *Voice) Speak(text string) {
 }
 
 func (v *Voice) Speakf(format string, values ...interface{}) {
-	v.Trigger("Speak", SpeakRequest{fmt.Sprintf(format, values...)})
+	v.Speak(fmt.Sprintf(format, values...))
+}
+
+func (v *Voice) SpeakAndWait(text string) {
+	r, _ := v.Call("Speak", SpeakRequest{text})
+	<-r.AsChan()
+}
+
+func (v *Voice) SpeakfAndWait(format string, values ...interface{}) {
+	v.SpeakAndWait(fmt.Sprintf(format, values...))
 }
 
 func (v *Voice) ObserveInSpeech() {
