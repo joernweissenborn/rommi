@@ -1,6 +1,7 @@
 package sphinx
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -56,12 +57,23 @@ func New(cfg *Config) (sr *Recognizer, err error) {
 
 func (sr *Recognizer) SetWordList(words []string) (err error) {
 
+	// only take action if we have to, regenerating the dict takes 5min on rpi
+	curWL, err := sr.readWordList()
+	if err != nil {
+		return
+	}
+	newWL := wordlist.FromStringSlice(words)
+
+	if curWL.ContainsAll(newWL) && len(curWL) == len(newWL) {
+		return
+	}
+
 	sr.inUtterance = false
 	sr.EndUtt()
 	defer sr.StartUtt()
 
 	// Word Create file
-	path := filepath.Join(sr.cfg.WorkDir, "wordlist")
+	path := sr.wordListPath()
 	ioutil.WriteFile(path, []byte(strings.Join(words, "\n")), os.ModePerm)
 
 	// Call g2p
@@ -78,6 +90,26 @@ func (sr *Recognizer) SetWordList(words []string) (err error) {
 
 	// Reconfigure
 	sr.Decoder.Reconfigure(sr.cfg.sphinxCfg())
+}
+
+func (sr *Recognizer) wordListPath() (path string) {
+	path := filepath.Join(sr.cfg.WorkDir, "wordlist")
+	return
+}
+
+func (sr *Recognizer) readWordList() (worldList wordlist.Wordlist, err error) {
+	f, err := os.Open(sr.wordListPath())
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	wordlist = wordlist{}
+	for scanner.Scan() {
+		wordlist.AddString(scanner.Text())
+	}
+	err = scanner.Err()
+	return
 }
 
 func (sr *Recognizer) Recognize(in *audio.AudioStream) (utterances *typedevents.StringStream) {
