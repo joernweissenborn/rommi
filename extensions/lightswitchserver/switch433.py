@@ -41,6 +41,7 @@ class Switch433Controller(Thread):
         return self._evt_q
 
     def _check_code(self, code):
+        #  print("received code:'{}'".format(code))
         for sw in self._switches:
             if code == self._switches[sw].ON:
                 print("Switch " + sw + " turned on")

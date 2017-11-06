@@ -71,13 +71,14 @@ func (sr *Recognizer) SetWordList(words []string) (err error) {
 		fmt.Sprintf("--output=%s", sr.cfg.Dict),
 	)
 
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return
 	}
 
 	// Reconfigure
 	sr.Decoder.Reconfigure(sr.cfg.sphinxCfg())
+	return
 }
 
 func (sr *Recognizer) Recognize(in *audio.AudioStream) (utterances *typedevents.StringStream) {
