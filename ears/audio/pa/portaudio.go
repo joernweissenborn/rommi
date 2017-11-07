@@ -10,21 +10,14 @@ import (
 )
 
 type PaAudio struct {
-	data                    unsafe.Pointer
-	sampleCount, sampleRate int
+	data                              unsafe.Pointer
+	sampleCount, sampleRate, channels int
 }
 
-func (a *PaAudio) Samples() []int16 {
-	return (*(*[1 << 24]int16)(a.data))[:a.sampleCount]
-}
-
-func (a *PaAudio) Rate() int {
-	return a.sampleRate
-}
-
-func (a *PaAudio) Size() int {
-	return a.sampleCount
-}
+func (a *PaAudio) Samples() []int16 { return (*(*[1 << 24]int16)(a.data))[:a.sampleCount] }
+func (a *PaAudio) Rate() int        { return a.sampleRate }
+func (a *PaAudio) Size() int        { return a.sampleCount }
+func (a *PaAudio) Channels() int    { return a.channels }
 
 type PortAudio struct {
 	inStream               *audio.AudioStreamController
@@ -71,6 +64,7 @@ func (pa *PortAudio) inCallback(input unsafe.Pointer, _ unsafe.Pointer, sampleCo
 		data:        input,
 		sampleCount: int(sampleCount),
 		sampleRate:  pa.sampleRate,
+		channels:    pa.channels,
 	})
 	return int32(portaudio.PaContinue)
 }
@@ -86,7 +80,7 @@ func (pa *PortAudio) StopRecording() (err error) {
 	err = paError(code)
 	return
 }
-func (pa *PortAudio) Shutdown(eventual2go.Data) (err error){
+func (pa *PortAudio) Shutdown(eventual2go.Data) (err error) {
 	portaudio.StopStream(pa.paInStream)
 	portaudio.CloseStream(pa.paInStream)
 	portaudio.Terminate()

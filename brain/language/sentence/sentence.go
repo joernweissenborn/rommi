@@ -14,6 +14,10 @@ func New(s string) Sentence {
 	return Sentence(strings.Split(s, " "))
 }
 
+func (s Sentence) String() string {
+	return strings.Join([]string(s), " ")
+}
+
 func (s Sentence) Len() (l int) {
 	for _, w := range s {
 		l += len(w)

@@ -2,6 +2,7 @@ package core
 
 import (
 	"path/filepath"
+	"rommi/ears"
 	"rommi/ears/audio"
 	"rommi/ears/audio/pa"
 	"rommi/ears/recognition"
@@ -15,21 +16,6 @@ import (
 	"github.com/joernweissenborn/eventual2go/typedevents"
 )
 
-const descriptor = `
-function SetWordList(Words []string)
-stream Utterances: Sentence string
-`
-
-type setWordList struct {
-	Words []string
-}
-
-type utterance struct {
-	Sentence string
-}
-
-type setWordListEvent struct{}
-
 var (
 	log        = logger.New("Rommis Ears")
 	channels   = 1
@@ -39,19 +25,23 @@ var (
 
 type core struct {
 	*eventual2go.Reactor
-	output     *thingiverseio.Output
-	recognizer recognition.Recognizer
-	recorder   audio.Recorder
-	recording  bool
-	shutdown   *eventual2go.Shutdown
+	listening     *typedevents.BoolObservable
+	recognizer    recognition.Recognizer
+	recorder      audio.Recorder
+	recordedAudio *audio.AudioStream
+	recordedWav   *audio.Wav
+	recording     bool
+	output        *thingiverseio.Output
+	shutdown      *eventual2go.Shutdown
 }
 
 func Start(path string) (err error) {
 	log.Init("Starting Up")
 
 	c := &core{
-		Reactor:  eventual2go.NewReactor(),
-		shutdown: eventual2go.NewShutdown(),
+		Reactor:   eventual2go.NewReactor(),
+		listening: typedevents.NewBoolObservable(false),
+		shutdown:  eventual2go.NewShutdown(),
 	}
 
 	log.Init("Initializing Audio")
@@ -64,7 +54,7 @@ func Start(path string) (err error) {
 
 	c.shutdown.Register(c.recorder.(eventual2go.Shutdowner))
 
-	audio, err := c.recorder.OpenRecordStream()
+	c.recordedAudio, err = c.recorder.OpenRecordStream()
 	if err != nil {
 		log.Error("Error Opening Record Stream: ", err)
 		return
@@ -72,7 +62,7 @@ func Start(path string) (err error) {
 
 	log.Success("Done")
 
-	log.Info("Initializing Recognizer")
+	log.Init("Initializing Recognizer")
 
 	hmm := filepath.Join(path, "hmm")
 	dict := filepath.Join(path, "dict")
@@ -101,7 +91,7 @@ func Start(path string) (err error) {
 
 	log.Success("Done")
 
-	log.Info("Initializing Voice")
+	log.Init("Initializing Voice")
 	v, err := voice.New()
 	if err != nil {
 		log.Error("Error Starting Voice: ", err)
@@ -109,27 +99,41 @@ func Start(path string) (err error) {
 	}
 	v.ObserveInSpeech()
 	c.AddObservable(voice.InSpeech{}, v.InSpeechObservable().Observable)
-	c.React(voice.InSpeech{}, c.onSpechChange)
+	c.React(voice.InSpeech{}, c.onSpeechChange)
 	v.Run()
 	log.Success("Done")
 
-	log.Info("Initializing Output")
-	c.output, err = thingiverseio.NewOutput(descriptor)
+	log.Init("Initializing Output")
+	c.output, err = thingiverseio.NewOutput(ears.Descriptor)
 	if err != nil {
 		log.Error("Error Starting Output: ", err)
 		return
 	}
-	isSetWL := func(r *message.Request) bool { return r.Function == "SetWordList" }
-	c.AddStream(setWordListEvent{}, c.output.Requests().Where(isSetWL).Stream)
-	c.React(setWordListEvent{}, c.onSetWordList)
-	c.recognizer.Recognize(audio).Listen(streamUtterance(c.output))
+	setListening := func(listen bool) { c.output.SetProperty("Listenting", ears.Listening{Is: listen}) }
+	c.listening.OnChange(setListening)
+	c.AddStream(ears.SetWordListReply{}, c.output.RequestsWhereFunction("SetWordList").Stream)
+	c.React(ears.SetWordListReply{}, c.onSetWordList)
 
-	log.Info("Start Recording")
+	c.AddStream(ears.StartRecordingRequest{}, c.output.RequestsWhereFunction("StartRecording").Stream)
+	c.React(ears.StartRecordingRequest{}, c.onStartRecording)
+
+	c.AddStream(ears.StopRecordingRequest{}, c.output.RequestsWhereFunction("StopRecording").Stream)
+	c.React(ears.StopRecordingRequest{}, c.onStopRecording)
+
+	c.AddStream(ears.GetRecordedWavRequest{}, c.output.RequestsWhereFunction("GetRecordedWav").Stream)
+	c.React(ears.GetRecordedWavRequest{}, c.onGetRecordedWav)
+
+	listening := func(audio.Audio) bool { return c.listening.Value() }
+	c.recognizer.Recognize(c.recordedAudio.Where(listening)).Listen(streamUtterance(c.output))
+
+	log.Init("Start Recording")
 	err = c.startRecording()
 	if err != nil {
 		log.Error("Error Start Recording: ", err)
 		return
 	}
+	log.Init("Start Listenting")
+	c.startListening()
 
 	log.Success("Done")
 
@@ -137,6 +141,9 @@ func Start(path string) (err error) {
 }
 
 func (c *core) startRecording() (err error) {
+	if c.recording {
+		return
+	}
 	log.Info("Start Recording")
 	err = c.recorder.StartRecording()
 	if err != nil {
@@ -148,6 +155,9 @@ func (c *core) startRecording() (err error) {
 }
 
 func (c *core) stopRecording() (err error) {
+	if !c.recording {
+		return
+	}
 	log.Info("Stop Recording")
 	err = c.recorder.StopRecording()
 	if err != nil {
@@ -158,13 +168,25 @@ func (c *core) stopRecording() (err error) {
 	return
 }
 
+func (c *core) startListening() (err error) {
+	log.Info("Start Listening")
+	c.listening.Change(true)
+	return
+}
+
+func (c *core) stopListening() (err error) {
+	log.Info("Stop Listening")
+	c.listening.Change(false)
+	return
+}
+
 func (c *core) onSetWordList(d eventual2go.Data) {
 	req := d.(*message.Request)
 	if c.recording {
 		c.stopRecording()
 		defer c.startRecording()
 	}
-	var wordlist setWordList
+	var wordlist ears.SetWordListRequest
 	req.Decode(&wordlist)
 	log.Infof("Got New World List: %s", wordlist.Words)
 	if err := c.recognizer.SetWordList(wordlist.Words); err != nil {
@@ -175,21 +197,50 @@ func (c *core) onSetWordList(d eventual2go.Data) {
 	c.output.Reply(req, nil)
 }
 
-func (c *core) onSpechChange(d eventual2go.Data) {
+func (c *core) onStartRecording(d eventual2go.Data) {
+	req := d.(*message.Request)
+	c.stopListening()
+	c.stopRecording()
+	c.recordedWav = audio.NewWav(c.recordedAudio)
+	log.Info("Start Recording Wav")
+	c.output.Reply(req, ears.StartRecordingReply{true})
+	c.startRecording()
+}
+
+func (c *core) onStopRecording(d eventual2go.Data) {
+	req := d.(*message.Request)
+	c.stopRecording()
+	err := c.recordedWav.Close()
+	log.Info("Stop Recording Wav")
+	if err != nil {
+		log.Error("Error Recording Wav: ", err)
+	}
+	c.output.Reply(req, ears.StopRecordingReply{err == nil})
+	c.startRecording()
+	c.startListening()
+}
+
+func (c *core) onGetRecordedWav(d eventual2go.Data) {
+	req := d.(*message.Request)
+	log.Info("Sending Recording Wav, length is ", len(c.recordedWav.Data()))
+	c.output.Reply(req, ears.GetRecordedWavReply{c.recordedWav.Data()})
+}
+
+func (c *core) onSpeechChange(d eventual2go.Data) {
 	var s voice.InSpeech
 	d.(thingiverseio.Property).Value(&s)
 	if s.Is {
-		log.Info("In Speech Detected, Stopped Recording")
-		c.stopRecording()
+		log.Info("In Speech Detected, Stopped Listening")
+		c.stopListening()
 	} else {
-		log.Info("In Speech Ended, Started Recording")
-		c.startRecording()
+		log.Info("In Speech Ended, Started Listening")
+		c.startListening()
 	}
 }
 
 func streamUtterance(output *thingiverseio.Output) typedevents.StringSubscriber {
 	return func(utt string) {
 		log.Infof("Got Utterance: %s", utt)
-		output.AddStream("Utterances", utterance{utt})
+		output.AddStream("Utterances", ears.Utterance{utt})
 	}
 }

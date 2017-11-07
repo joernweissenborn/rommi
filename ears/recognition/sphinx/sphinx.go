@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"rommi/brain/language/wordlist"
 	"rommi/ears/audio"
 	"strings"
 
@@ -94,20 +95,20 @@ func (sr *Recognizer) SetWordList(words []string) (err error) {
 }
 
 func (sr *Recognizer) wordListPath() (path string) {
-	path := filepath.Join(sr.cfg.WorkDir, "wordlist")
+	path = filepath.Join(sr.cfg.WorkDir, "wordlist")
 	return
 }
 
-func (sr *Recognizer) readWordList() (worldList wordlist.Wordlist, err error) {
+func (sr *Recognizer) readWordList() (wl wordlist.WordList, err error) {
 	f, err := os.Open(sr.wordListPath())
 	if err != nil {
 		return
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	wordlist = wordlist{}
+	wl = wordlist.WordList{}
 	for scanner.Scan() {
-		wordlist.AddString(scanner.Text())
+		wl.AddString(scanner.Text())
 	}
 	err = scanner.Err()
 	return

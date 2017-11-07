@@ -45,11 +45,19 @@ func (wl WordList) Merge(t WordList) {
 	}
 }
 
-func (wl WordList) Strings() (s []string) {
+func (wl WordList) Delete(word string) {
+	delete(wl, word)
+}
+
+func (wl WordList) Words() (s []string) {
 	for w := range wl {
 		s = append(s, w)
 	}
 	return
+}
+
+func (wl WordList) String() {
+	return strings.Join(wl.Words(), "\n")
 }
 
 func (wl WordList) ContainsAll(t WordList) (contains bool) {

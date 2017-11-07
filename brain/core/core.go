@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"rommi/brain"
 	"rommi/brain/extension"
 	"rommi/brain/language/sentence"
@@ -86,13 +87,77 @@ func Start() (err error) {
 		log.Error(err)
 		return
 	}
-	isTC := func(r *thingiverseio.Request) bool { return r.Function == "TellCommand" }
-	c.AddStream(brain.TellCommandRequest{}, c.output.Requests().Where(isTC).Stream)
-	c.React(brain.TellCommandRequest{},c.onTellCommand)
+	c.AddStream(brain.TellCommandRequest{}, c.output.RequestsWhereFunction("TellCommand").Stream)
+	c.React(brain.TellCommandRequest{}, c.onTellCommand)
+	c.AddStream(brain.GetTriggerWordRequest{}, c.output.RequestsWhereFunction("GetTriggerWord").Stream)
+	c.React(brain.GetTriggerWordRequest{}, c.onGetTriggerWord)
+	c.AddStream(brain.GetServicesRequest{}, c.output.RequestsWhereFunction("GetServices").Stream)
+	c.React(brain.GetServicesRequest{}, c.onGetServices)
+	c.AddStream(brain.GetServiceActionsRequest{}, c.output.RequestsWhereFunction("GetServiceActions").Stream)
+	c.React(brain.GetServiceActionsRequest{}, c.onGetServiceActions)
+	c.AddStream(brain.GetActionSentencesRequest{}, c.output.RequestsWhereFunction("GetActionSentences").Stream)
+	c.React(brain.GetActionSentencesRequest{}, c.onGetActionSentences)
 	c.output.Run()
 
 	log.Init("Done")
 	return
+}
+
+func (c *core) onTellCommand(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	var tellCmdReq brain.TellCommandRequest
+	r.Decode(&tellCmdReq)
+	log.Info("Got Told A Command: ", tellCmdReq.Cmd)
+
+	c.checkForAction(sentence.New(tellCmdReq.Cmd))
+	c.output.Reply(r, nil)
+}
+
+func (c *core) onGetTriggerWord(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	c.output.Reply(r, brain.GetTriggerWordReply{TriggerWord: triggerWord})
+}
+
+func (c *core) onGetServices(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	var rep brain.GetServicesReply
+	for name := range c.services {
+		rep.Services = append(rep.Services, name)
+	}
+	c.output.Reply(r, rep)
+}
+
+func (c *core) onGetActionSentences(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	var req brain.GetActionSentencesRequest
+	r.Decode(&req)
+	fmt.Println(req)
+	var rep brain.GetActionSentencesReply
+	if service, ok := c.services[req.Service]; ok {
+		for _, action := range service.GetActions() {
+			if action.GetName() == req.Action {
+				for _, s := range action.GetSentences() {
+					rep.Sentences = append(rep.Sentences, s.String())
+				}
+				break
+			}
+		}
+
+	}
+	c.output.Reply(r, rep)
+}
+
+func (c *core) onGetServiceActions(d eventual2go.Data) {
+	r := d.(*thingiverseio.Request)
+	var req brain.GetServiceActionsRequest
+	r.Decode(&req)
+	var rep brain.GetServiceActionsReply
+	if service, ok := c.services[req.Service]; ok {
+		for _, action := range service.GetActions() {
+			rep.Actions = append(rep.Actions, action.GetName())
+		}
+	}
+	c.output.Reply(r, rep)
 }
 
 func (c *core) updateWordList(eventual2go.Data) {
@@ -159,16 +224,6 @@ func (c *core) onUtterance(d eventual2go.Data) {
 	}
 }
 
-func (c *core) onTellCommand(d eventual2go.Data) {
-	r := d.(*thingiverseio.Request)
-	var tellCmdReq brain.TellCommandRequest
-	r.Decode(&tellCmdReq)
-	log.Info("Got Told A Command: ", tellCmdReq.Cmd)
-
-	c.checkForAction(sentence.New(tellCmdReq.Cmd))
-	c.output.Reply(r, nil)
-}
-
 func (c *core) checkForAction(s sentence.Sentence) (ok bool) {
 	var score float64
 	var srv service.Service
@@ -222,10 +277,4 @@ func (c *core) startListenToCmd() {
 func (c *core) onStopListenToCmd(eventual2go.Data) {
 	log.Info("Stop listening for commands")
 	c.listening = false
-}
-
-func (c *core) callForServices() {
-	for _ = range time.Tick(10 * time.Millisecond) {
-		// c.output.Emit("CallForServices", nil, nil)
-	}
 }
