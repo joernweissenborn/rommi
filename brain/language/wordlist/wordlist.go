@@ -56,7 +56,7 @@ func (wl WordList) Words() (s []string) {
 	return
 }
 
-func (wl WordList) String() {
+func (wl WordList) String() string {
 	return strings.Join(wl.Words(), "\n")
 }
 
