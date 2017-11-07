@@ -2,12 +2,12 @@ package core
 
 import (
 	"path/filepath"
-	"rommi/ears"
-	"rommi/ears/audio"
-	"rommi/ears/audio/pa"
-	"rommi/ears/recognition"
-	"rommi/ears/recognition/sphinx"
-	"rommi/voice"
+	"rommi/lib/audio"
+	"rommi/lib/audio/pa"
+	"rommi/lib/recognition"
+	"rommi/lib/recognition/sphinx"
+	"rommi/modules/ears"
+	"rommi/modules/voice"
 
 	"github.com/ThingiverseIO/logger"
 	"github.com/ThingiverseIO/thingiverseio"

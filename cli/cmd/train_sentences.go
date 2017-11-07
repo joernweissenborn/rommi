@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"os"
-	"rommi/brain"
-	"rommi/ears/train"
+	"rommi/modules/brain"
+	"rommi/lib/train"
 
 	"github.com/spf13/cobra"
 )

@@ -2,8 +2,8 @@ package core
 
 import (
 	"fmt"
-	"rommi/brain/language/sentence"
-	"rommi/brain/service"
+	"rommi/libs/language/sentence"
+	"rommi/modules/brain/service"
 	"time"
 
 	"github.com/joernweissenborn/eventual2go"

@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"rommi/voice"
+	"rommi/modules/voice"
 
 	"github.com/ThingiverseIO/logger"
 	"github.com/ThingiverseIO/thingiverseio"

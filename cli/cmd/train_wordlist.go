@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"os"
-	"rommi/ears/train"
+	"rommi/lib/train"
 
 	"github.com/spf13/cobra"
 )

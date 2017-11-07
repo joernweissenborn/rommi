@@ -1,8 +1,8 @@
 package main
 
 import (
-	"rommi/brain/extension"
-	"rommi/brain/language/sentence"
+	"rommi/lib/extension"
+	"rommi/lib/language/sentence"
 )
 
 var ext = extension.Extension{

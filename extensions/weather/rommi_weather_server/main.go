@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"rommi/brain/extension"
-	"rommi/voice"
+	"rommi/lib/extension"
+	"rommi/modules/voice"
 	"time"
 
 	"github.com/ThingiverseIO/logger"

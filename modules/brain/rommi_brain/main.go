@@ -3,15 +3,12 @@ package main
 import (
 	"os"
 	"os/signal"
-	"rommi/ears/core"
+	"rommi/modules/brain/core"
 )
 
 func main() {
-	path, _ := os.Getwd()
-	if len(os.Args) > 1 {
-		path = os.Args[1]
-	}
-	if err := core.Start(path); err != nil {
+
+	if err := core.Start(); err != nil {
 		os.Exit(1)
 		return
 	}

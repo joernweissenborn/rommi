@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"rommi/brain"
+	"rommi/modules/brain"
 
 	"github.com/spf13/cobra"
 )

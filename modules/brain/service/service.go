@@ -1,8 +1,8 @@
 package service
 
 import (
-	"rommi/brain/language/sentence"
-	"rommi/brain/language/wordlist"
+	"rommi/lib/language/sentence"
+	"rommi/lib/language/wordlist"
 
 	"github.com/joernweissenborn/eventual2go"
 )

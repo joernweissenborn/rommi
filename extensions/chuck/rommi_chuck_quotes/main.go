@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 	"os/signal"
-	"rommi/brain/extension"
-	"rommi/voice"
+	"rommi/lib/extension"
+	"rommi/modules/voice"
 
 	"github.com/ThingiverseIO/logger"
 	"github.com/ThingiverseIO/thingiverseio"
@@ -36,7 +36,7 @@ func main() {
 
 	rep := func(r *thingiverseio.Request) {
 		q := getRandomQuote()
-		log.Info("Telling Quote: ",q)
+		log.Info("Telling Quote: ", q)
 		v.Speak(q)
 		output.Reply(r, nil)
 	}

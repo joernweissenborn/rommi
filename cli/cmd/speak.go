@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"rommi/voice"
+	"rommi/modules/voice"
 	"strings"
 
 	"github.com/spf13/cobra"

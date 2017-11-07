@@ -2,13 +2,13 @@ package core
 
 import (
 	"fmt"
-	"rommi/brain"
-	"rommi/brain/extension"
-	"rommi/brain/language/sentence"
-	"rommi/brain/language/wordlist"
-	"rommi/brain/service"
-	"rommi/ears"
-	"rommi/voice"
+	"rommi/libs/extension"
+	"rommi/libs/language/sentence"
+	"rommi/libs/language/wordlist"
+	"rommi/modules/brain"
+	"rommi/modules/brain/service"
+	"rommi/modules/ears"
+	"rommi/modules/voice"
 	"time"
 
 	"github.com/ThingiverseIO/logger"

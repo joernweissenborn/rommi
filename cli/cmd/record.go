@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
-	"rommi/ears"
+	"rommi/modules/ears"
 
 	"github.com/spf13/cobra"
 )

@@ -1,8 +1,8 @@
 package ears
 
 import (
-	"rommi/brain/language/sentence"
-	"rommi/brain/language/wordlist"
+	"rommi/lib/language/sentence"
+	"rommi/lib/language/wordlist"
 
 	"github.com/ThingiverseIO/thingiverseio"
 	"github.com/joernweissenborn/eventual2go"
