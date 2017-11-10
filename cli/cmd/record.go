@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"bufio"
+	"errors"
 	"io/ioutil"
-	"os"
 	"rommi/modules/ears"
 
+	"github.com/ThingiverseIO/console"
 	"github.com/spf13/cobra"
 )
 
@@ -20,25 +20,10 @@ var recordCmd = &cobra.Command{
 		if len(args) == 0 {
 			return cmd.Usage()
 		}
-		e, err := ears.New()
+		wav, err := record()
 		if err != nil {
 			return err
 		}
-		e.Run()
-		if !e.StartRecording() {
-			cmd.Println("Failed to start Recording")
-			return nil
-		}
-		cmd.Println("Started Recording, press return to stop")
-		consoleReader := bufio.NewReaderSize(os.Stdin, 1)
-		consoleReader.ReadByte()
-		if !e.StopRecording() {
-			cmd.Println("An Error Happened during Recording")
-			return nil
-		}
-		cmd.Println("Stopped Recording")
-
-		wav := e.GetRecordedWav()
 		cmd.Println("Lenght of recorded WAVE is:", len(wav))
 		cmd.Println("Writing File to", args[0])
 		err = ioutil.WriteFile(args[0], wav, 0644)
@@ -49,4 +34,30 @@ var recordCmd = &cobra.Command{
 		}
 		return nil
 	},
+}
+
+func record() (wav []byte, err error) {
+	e, err := ears.New()
+	if err != nil {
+		return
+	}
+	e.Run()
+	console.Println("Waiting for ears.")
+	e.WaitUntilConnected()
+	if console.AskEnterOrAbort("Ready To Record, press enter to start or 'q' enter to abort", "q") {
+		err = errors.New("Aborted")
+		return
+	}
+	if !e.StartRecording() {
+		err = errors.New("Failed to start Recording")
+		return
+	}
+	console.AskEnter("Started Recording, press enter to stop")
+	if !e.StopRecording() {
+		err = errors.New("An Error Happened during Recording")
+		return
+	}
+	console.Println("Stopped Recording")
+	wav = e.GetRecordedWav()
+	return
 }

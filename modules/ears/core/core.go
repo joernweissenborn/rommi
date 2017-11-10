@@ -29,7 +29,7 @@ type core struct {
 	recognizer    recognition.Recognizer
 	recorder      audio.Recorder
 	recordedAudio *audio.AudioStream
-	recordedWav   *audio.Wav
+	recordedWav   *audio.WavRecorder
 	recording     bool
 	output        *thingiverseio.Output
 	shutdown      *eventual2go.Shutdown
@@ -201,7 +201,7 @@ func (c *core) onStartRecording(d eventual2go.Data) {
 	req := d.(*message.Request)
 	c.stopListening()
 	c.stopRecording()
-	c.recordedWav = audio.NewWav(c.recordedAudio)
+	c.recordedWav = audio.NewWavRecorder(c.recordedAudio)
 	log.Info("Start Recording Wav")
 	c.output.Reply(req, ears.StartRecordingReply{true})
 	c.startRecording()

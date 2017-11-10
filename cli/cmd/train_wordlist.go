@@ -27,12 +27,8 @@ var trainWordListCmd = &cobra.Command{
 		if err != nil {
 			return
 		}
+		wl := t.GetWordList()
 		cmd.Println("Success")
-		cmd.Println("Reading WordList")
-		wl, err := t.GetWordList()
-		if err != nil {
-			return
-		}
 		cmd.Println("Words in database")
 		cmd.Println("=====================")
 		cmd.Println("")
