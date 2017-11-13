@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"rommi/libs/language/sentence"
+	"rommi/lib/language/sentence"
 	"rommi/modules/brain/service"
 	"time"
 

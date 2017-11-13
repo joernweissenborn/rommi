@@ -2,9 +2,9 @@ package core
 
 import (
 	"fmt"
-	"rommi/libs/extension"
-	"rommi/libs/language/sentence"
-	"rommi/libs/language/wordlist"
+	"rommi/lib/extension"
+	"rommi/lib/language/sentence"
+	"rommi/lib/language/wordlist"
 	"rommi/modules/brain"
 	"rommi/modules/brain/service"
 	"rommi/modules/ears"
