@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 forecast_berlin.json
 
 # Binaries for programs and plugins
 *.exe
 *.dll
 *.so
-*.dylib
 
 # Test binary, build with `go test -c`
 *.test
@@ -16,8 +14,6 @@ forecast_berlin.json
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
-=======
->>>>>>> 99d058ccedd8d2d103c9ef69874b51096668a715
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -28,17 +24,14 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-<<<<<<< HEAD
-=======
 env/
->>>>>>> 99d058ccedd8d2d103c9ef69874b51096668a715
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
@@ -47,10 +40,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-<<<<<<< HEAD
 MANIFEST
-=======
->>>>>>> 99d058ccedd8d2d103c9ef69874b51096668a715
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -79,11 +69,8 @@ coverage.xml
 
 # Django stuff:
 *.log
-<<<<<<< HEAD
 .static_storage/
 .media/
-=======
->>>>>>> 99d058ccedd8d2d103c9ef69874b51096668a715
 local_settings.py
 
 # Flask stuff:
@@ -111,7 +98,6 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-<<<<<<< HEAD
 # Environments
 .env
 .venv
@@ -120,7 +106,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-=======
 # dotenv
 .env
 
@@ -128,7 +113,6 @@ venv.bak/
 .venv
 venv/
 ENV/
->>>>>>> 99d058ccedd8d2d103c9ef69874b51096668a715
 
 # Spyder project settings
 .spyderproject
